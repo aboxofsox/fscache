@@ -9,8 +9,9 @@ import (
 )
 
 type Cache struct {
-	mu    sync.RWMutex
-	Items map[string]any
+	mu       sync.RWMutex
+	filepath string
+	Items    map[string]any
 }
 
 type Item struct {
@@ -30,11 +31,19 @@ func Register(values ...any) {
 }
 
 // NewCache returns a new cache instances.
-func NewCache() *Cache {
-	return &Cache{
-		mu:    sync.RWMutex{},
-		Items: make(map[string]any),
+func NewCache(path string) *Cache {
+	c := &Cache{
+		mu:       sync.RWMutex{},
+		filepath: path,
+		Items:    make(map[string]any),
 	}
+
+	err := c.Save()
+	if err != nil {
+		panic(err)
+	}
+
+	return c
 }
 
 // NewItem returns a new cache item.
@@ -109,44 +118,36 @@ func (c *Cache) Sort() []string {
 }
 
 // Save saves the cache to a file.
-func (c *Cache) Save(name string) error {
-	f, err := os.Create(name)
+func (c *Cache) Save() error {
+	f, err := os.OpenFile(c.filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	err = encode(f, c)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return encode(f, c.Items)
 }
 
 // Load loads the cache from a file.
-func Load(name string) (*Cache, error) {
-	f, err := os.OpenFile(name, os.O_CREATE|os.O_RDONLY, 0666)
+func Load(path string) (*Cache, error) {
+	c := &Cache{filepath: path}
+
+	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return c, err
 	}
 	defer f.Close()
 
-	c := &Cache{}
-	err = decode(f, c)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	err = decode(f, &c.Items)
+	return c, err
 }
 
-func encode(w io.Writer, c *Cache) error {
+func encode(w io.Writer, items map[string]any) error {
 	enc := gob.NewEncoder(w)
-	return enc.Encode(c)
+	return enc.Encode(items)
 }
 
-func decode(r io.Reader, c *Cache) error {
+func decode(r io.Reader, items *map[string]any) error {
 	dec := gob.NewDecoder(r)
-	return dec.Decode(c)
+	return dec.Decode(items)
 }

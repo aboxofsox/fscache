@@ -6,7 +6,7 @@ import (
 )
 
 func TestFsCache(t *testing.T) {
-	c := NewCache()
+	c := NewCache("test.gob")
 
 	c.Set("foo", "bar")
 
@@ -24,17 +24,24 @@ func TestFsCache(t *testing.T) {
 }
 
 func TestIo(t *testing.T) {
-	c := NewCache()
+	c := NewCache("test.gob")
 	c.Set("foo", "bar")
 
-	err := c.Save("test.gob")
+	if _, err := os.Stat("test.gob"); os.IsNotExist(err) {
+		t.Error("test.gob does not exist")
+		return
+	}
+
+	err := c.Save()
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	cc, err := Load("test.gob")
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	if v, ok := cc.Get("foo"); !ok || v != "bar" {
@@ -47,11 +54,15 @@ func TestIo(t *testing.T) {
 		t.Error("Set failed")
 	}
 
-	cc.Save("test.gob")
+	err = cc.Save()
+	if err != nil {
+		t.Error(err)
+	}
 
 	ccc, err := Load("test.gob")
 	if err != nil {
 		t.Error(err)
+
 	}
 
 	if v, ok := ccc.Get("baz"); !ok || v != "qux" {

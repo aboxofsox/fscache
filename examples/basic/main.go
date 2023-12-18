@@ -48,7 +48,7 @@ func getValue(cache *fscache.Cache) http.HandlerFunc {
 }
 
 func main() {
-	cache := fscache.NewCache()
+	cache := fscache.NewCache("foo.gob")
 
 	http.HandleFunc("/set", setValue(cache))
 	http.HandleFunc("/get", getValue(cache))
