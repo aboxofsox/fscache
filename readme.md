@@ -24,7 +24,7 @@ func setValue(cache *fscache.Cache) http.HandlerFunc {
 			return
 		}
 
-		cache.Set(key, value) // set the value
+		cache.Set(key, value)
 
 		w.Write([]byte("OK"))
 	}
@@ -41,7 +41,7 @@ func getValue(cache *fscache.Cache) http.HandlerFunc {
 			return
 		}
 
-		value, ok := cache.Get(key) // get the key from cache
+		value, ok := cache.Get(key)
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("Not Found"))
@@ -53,7 +53,7 @@ func getValue(cache *fscache.Cache) http.HandlerFunc {
 }
 
 func main() {
-	cache := fscache.NewCache() // create a new cache
+	cache := fscache.NewCache("foo.gob")
 
 	http.HandleFunc("/set", setValue(cache))
 	http.HandleFunc("/get", getValue(cache))
