@@ -126,7 +126,7 @@ func (c *Cache) Save(name string) error {
 
 // Load loads the cache from a file.
 func Load(name string) (*Cache, error) {
-	f, err := os.Open(name)
+	f, err := os.OpenFile(name, os.O_CREATE|os.O_RDONLY, 0666)
 	if err != nil {
 		return nil, err
 	}
